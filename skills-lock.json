@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "cloudinary-get-started": {
+      "source": "cloudinary-devs/cloudinary-get-started",
+      "sourceType": "github",
+      "skillPath": "skills/cloudinary-get-started/SKILL.md",
+      "computedHash": "1af141d9b896e6056cf0c2f1e43d1b7c683ff1a7e1b9a9c0de72389a145c9667"
+    }
+  }
+}
