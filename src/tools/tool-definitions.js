@@ -3,6 +3,8 @@ import {
   generateBlogDraft,
   generateDocs,
   generateSocialPosts,
+  generateOutreachPlan,
+  generateOutreachMessages,
 } from './content-tools.js';
 import {
   uploadLaunchImage,
@@ -110,6 +112,45 @@ export const TOOLS = [
     },
   },
   {
+    name: 'generate_outreach_plan',
+    description:
+      'Recommend outreach channels and sequencing for reaching this launch\'s first customers, tailored to the target customer described in the brief. Call this once the brief describes a target customer, before generate_outreach_messages, so messaging can be drafted for the recommended channels rather than a generic list.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        featureName: { type: 'string' },
+        targetCustomer: { type: 'string', description: 'Who the first customers are: role, company/context, where to find them, pain points' },
+        keyBenefits: { type: 'string' },
+        category: {
+          type: 'string',
+          enum: ['technical', 'retail', 'travel', 'real-estate', 'home-improvement'],
+        },
+      },
+      required: ['featureName', 'targetCustomer', 'keyBenefits'],
+    },
+  },
+  {
+    name: 'generate_outreach_messages',
+    description:
+      'Draft ready-to-send outreach messages for first customers, one per channel. Call this AFTER generate_outreach_plan so messages match its recommended channels. These are drafts for a human to review and deploy, not sent automatically — each message ends with an explicit call to action and a review reminder.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        featureName: { type: 'string' },
+        targetCustomer: { type: 'string' },
+        keyBenefits: { type: 'string' },
+        channels: {
+          type: 'array',
+          items: { type: 'string' },
+          description: "Channels to draft messages for, e.g. generate_outreach_plan's recommended channels (cold email, LinkedIn DM, community post, etc.)",
+        },
+        tone: { type: 'string' },
+        imageUrl: { type: 'string', description: 'Optional Cloudinary URL to reference alongside the message' },
+      },
+      required: ['featureName', 'targetCustomer', 'keyBenefits', 'channels'],
+    },
+  },
+  {
     name: 'upload_launch_image',
     description:
       'Upload a source launch asset — image OR video, local path or URL — into Cloudinary under a launch-specific folder. Call this once per source asset (e.g. hero image, product screenshot, demo video) before requesting crops or embedding it in content. Tags it with the launch slug and an optional role so it can be found later via find_launch_assets.',
@@ -194,6 +235,10 @@ export async function executeTool(name, input) {
       return { content: await generateDocs(input) };
     case 'generate_social_posts':
       return { content: await generateSocialPosts(input) };
+    case 'generate_outreach_plan':
+      return { content: await generateOutreachPlan(input) };
+    case 'generate_outreach_messages':
+      return { content: await generateOutreachMessages(input) };
     case 'upload_launch_image':
       return await uploadLaunchImage(input);
     case 'find_launch_assets':

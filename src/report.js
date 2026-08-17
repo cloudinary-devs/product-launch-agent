@@ -13,7 +13,13 @@ export function buildHtmlReport({ launchSlug, results, summary }) {
     generate_blog_draft: 'Blog draft',
     generate_docs: 'Docs / details sheet',
     generate_social_posts: 'Social posts',
+    generate_outreach_plan: 'Outreach plan',
+    generate_outreach_messages: 'Outreach messages',
   };
+
+  // Outreach messages are drafts a human sends manually — flag them distinctly
+  // so they don't read as already-completed, sent communication.
+  const OUTREACH_MESSAGE_TOOLS = new Set(['generate_outreach_messages']);
 
   const contentSections = results
     .filter((r) => contentTools[r.tool] && r.output?.content)
@@ -21,6 +27,11 @@ export function buildHtmlReport({ launchSlug, results, summary }) {
       (r) => `
       <section class="card">
         <h2>${contentTools[r.tool]}</h2>
+        ${
+          OUTREACH_MESSAGE_TOOLS.has(r.tool)
+            ? '<p class="review-banner">⚠ Drafts only — review recipient and channel details before sending anything.</p>'
+            : ''
+        }
         <div class="content">${marked.parse(r.output.content)}</div>
       </section>`
     )
@@ -96,11 +107,13 @@ export function buildHtmlReport({ launchSlug, results, summary }) {
   .asset a { font-size: 0.8rem; }
   .broken { padding: 1rem; background: #fdecea; border-radius: 6px; font-size: 0.8rem; color: #a33; }
   .muted { color: #888; }
+  .review-banner { background: #fff4e0; color: #8a5a00; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 600; margin: 0 0 0.75rem; }
   @media (prefers-color-scheme: dark) {
     body { background: #111; color: #eee; }
     .card, .asset { border-color: #333; }
     .content pre, .summary { background: #1c1c1c; }
     .broken { background: #3a1f1f; color: #e88; }
+    .review-banner { background: #3a2c0f; color: #e8b95e; }
   }
 </style>
 </head>

@@ -15,6 +15,13 @@ const CATEGORIES = {
   5: { key: 'home-improvement', label: 'Home improvement / home goods', platforms: 'instagram, pinterest, facebook' },
 };
 
+const PLATFORM_OPTIONS = ['x', 'linkedin', 'instagram', 'pinterest', 'tiktok', 'facebook'];
+
+const CHANNEL_OPTIONS = [
+  { key: 'og_image', label: 'Link preview image (what people see when this page is shared, e.g. in Slack or social)' },
+  { key: 'email_header', label: 'Email header banner' },
+];
+
 export async function runWizard() {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const ask = async (question, { required = false } = {}) => {
@@ -41,17 +48,51 @@ export async function runWizard() {
 
   const featureName = await ask('What are you launching? (feature/product name): ', { required: true });
   const launchSlug = await ask(
-    'Launch slug (short id used to tag/find Cloudinary assets, e.g. "feature-x"): ',
+    'Launch slug — a short id for this launch, used to find its photos later (e.g. "feature-x"): ',
     { required: true }
   );
   const keyChanges = await ask('What changed / key benefits? (comma-separated is fine): ', { required: true });
-  const audience = await ask('Audience for release notes (default: existing customers): ');
+  const audience = await ask("Who's this launch announcement for? (default: existing customers): ");
   const tone = await ask('Blog tone (default: confident, plain-spoken): ');
   const technicalDetails = await ask(
     `${category.key === 'technical' ? 'Technical details to cover in the docs' : 'Details to cover in the product/details sheet (specs, materials, policies, etc.)'}: `
   );
-  const platformsRaw = await ask(`Social platforms, comma-separated (default: ${category.platforms}): `);
-  const channelsRaw = await ask('Extra asset channels beyond social crops, comma-separated (default: og_image, email_header): ');
+
+  let platforms = category.platforms;
+  while (true) {
+    const raw = await ask(
+      `Which platforms should we post to? Choose from ${PLATFORM_OPTIONS.join(', ')} (comma-separated, default: ${category.platforms}): `
+    );
+    if (!raw) break;
+    const values = raw.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean);
+    const invalid = values.filter((v) => !PLATFORM_OPTIONS.includes(v));
+    if (invalid.length) {
+      console.log(`  Not a supported platform: ${invalid.join(', ')}. Choose from: ${PLATFORM_OPTIONS.join(', ')}.`);
+      continue;
+    }
+    platforms = values.join(', ');
+    break;
+  }
+
+  console.log('\nAny extra images needed beyond your social posts?');
+  CHANNEL_OPTIONS.forEach((c, i) => console.log(`  ${i + 1}. ${c.label}`));
+  let channels = CHANNEL_OPTIONS.map((c) => c.key).join(', ');
+  while (true) {
+    const raw = await ask(`Enter numbers separated by commas (default: all): `);
+    if (!raw) break;
+    const nums = raw.split(',').map((v) => v.trim()).filter(Boolean);
+    const invalid = nums.filter((n) => !CHANNEL_OPTIONS[Number(n) - 1]);
+    if (invalid.length) {
+      console.log(`  Not a valid option: ${invalid.join(', ')}. Enter numbers between 1 and ${CHANNEL_OPTIONS.length}.`);
+      continue;
+    }
+    channels = nums.map((n) => CHANNEL_OPTIONS[Number(n) - 1].key).join(', ');
+    break;
+  }
+
+  const targetCustomer = await ask(
+    'Who are you hoping to reach as first customers? (role, company/context, where to find them — leave blank to skip outreach prep): '
+  );
 
   console.log(
     '\nImagery/video for this launch — has it already been uploaded and tagged in Cloudinary\nwith this launch slug? If not, you can paste source URLs instead.'
@@ -63,9 +104,6 @@ export async function runWizard() {
   }
 
   rl.close();
-
-  const platforms = platformsRaw || category.platforms;
-  const channels = channelsRaw || 'og_image, email_header';
 
   const assetSection = assetsTagged
     ? `Launch imagery has already been uploaded and tagged in Cloudinary with the\n"${launchSlug}" tag — find it rather than asking me for URLs.`
@@ -86,16 +124,22 @@ ${keyChanges}
 
 ${assetSection}
 
-Audience for release notes: ${audience || 'existing customers'}.
+Audience: ${audience || 'existing customers'}.
 Blog tone: ${tone || 'confident, plain-spoken'}.
 Details to cover in the supporting doc/sheet: ${technicalDetails || '(use the key changes above)'}.
 Social platforms: ${platforms}. Pair the social posts with a social-cropped
 image if one is available.
-Asset channels needed beyond social crops: ${channels}.
+Extra image types needed beyond social crops: ${channels}.
+
+${
+    targetCustomer
+      ? `Target customer for outreach:\n${targetCustomer}`
+      : 'No target customer described — skip outreach prep entirely.'
+  }
 
 Note: pass "${category.key}" as the \`category\` argument to generate_release_notes,
-generate_blog_draft, and generate_docs, so each output uses the right vocabulary
-and structure for this kind of launch.
+generate_blog_draft, generate_docs, and generate_outreach_plan, so each output uses
+the right vocabulary and structure for this kind of launch.
 `.trim();
 
   return { brief, launchSlug };

@@ -14,6 +14,11 @@ An agent that coordinates everything needed to ship a feature launch:
 - Generate an Open Graph image with a text overlay
 - Generate resized assets for other channels (email header, etc.)
 
+**Outreach** (via Claude, when a target customer is described):
+- A plan recommending outreach channels and sequencing for reaching first customers
+- Ready-to-send messages per channel, each ending with an explicit call to action
+- Drafts only — the agent never sends anything; a human reviews and deploys them
+
 ## Getting imagery to the agent
 
 Two ways, and the first is the one worth building toward:
@@ -66,9 +71,10 @@ npm start
 
 You'll be walked through a short wizard: what kind of launch this is (technical,
 retail, travel, real estate, or home improvement), what you're launching, key
-changes/benefits, audience, tone, and how to get imagery (already tagged in
-Cloudinary, or paste source URLs). Answering `--file brief.txt` instead of the
-wizard is also supported, for scripting: `npm start -- --file brief.txt`.
+changes/benefits, audience, tone, how to get imagery (already tagged in
+Cloudinary, or paste source URLs), and who you're hoping to reach as first
+customers (leave blank to skip outreach prep). Answering `--file brief.txt`
+instead of the wizard is also supported, for scripting: `npm start -- --file brief.txt`.
 
 This will:
 1. Print each tool call as the agent makes it.

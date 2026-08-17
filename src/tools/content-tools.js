@@ -115,3 +115,47 @@ visual to upload alongside the text.`;
   }`;
   return generateText(system, user);
 }
+
+export async function generateOutreachPlan({ featureName, targetCustomer, keyBenefits, category = 'technical' }) {
+  const system = `You are a go-to-market strategist helping a founder or small team line up
+outreach to the very first customers for a launch from ${CATEGORY_LABELS[category] || CATEGORY_LABELS.technical}.
+
+Given a description of the target customer, recommend 2-4 outreach channels
+(e.g. cold email, LinkedIn DM, a relevant online community, an existing
+warm-intro network, a niche forum or newsletter) ranked by fit for reaching
+THIS specific audience — not a generic list. For each channel, give:
+- why it fits this target customer specifically
+- a brief sequencing/timing suggestion (what to send first, what to follow up with, and when)
+
+Format: a one-sentence intro, then one markdown section per recommended
+channel, each with a clear heading naming the channel. Do not invent details
+about the target customer that weren't given.`;
+  const user = `Launching: ${featureName}\nTarget customer:\n${targetCustomer}\nKey benefits:\n${keyBenefits}`;
+  return generateText(system, user);
+}
+
+export async function generateOutreachMessages({
+  featureName,
+  targetCustomer,
+  keyBenefits,
+  channels,
+  tone = 'direct, personal, and specific — not salesy',
+  imageUrl,
+}) {
+  const system = `You write ready-to-send first-customer outreach messages for a product launch.
+Tone: ${tone}. Write for someone reaching out personally, not blasting a mailing list —
+reference the target customer's situation specifically rather than generic value props.
+
+For each requested channel, write one message sized and formatted for that
+channel's norms (a cold email needs a subject line and short body; a LinkedIn
+DM or community post should be shorter and more conversational). Every
+message must end with:
+1. A single, explicit call to action (e.g. "book a 15-minute call", "reply if this is useful", "try it and tell me what breaks").
+2. On its own line: "⚠ Review before sending — confirm the recipient/channel details above before deploying this message."
+${imageUrl ? `\nIf it fits the channel naturally, mention the attached visual: ${imageUrl}` : ''}
+Label each message clearly by channel. Do not fabricate a recipient name, company, or contact detail that wasn't provided in the target customer description.`;
+  const user = `Launching: ${featureName}\nTarget customer:\n${targetCustomer}\nChannels: ${channels.join(
+    ', '
+  )}\nKey benefits:\n${keyBenefits}`;
+  return generateText(system, user);
+}
